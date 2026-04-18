@@ -61,6 +61,22 @@ app.get('/api/waiting-inmates', async (req, res) => {
   }
 });
 
+app.post('/api/waiting-inmates', async (req, res) => {
+  try {
+    const { first_name, last_name, inmate_number, prison, state, intro_letter } = req.body;
+    
+    const result = await pool.query(
+      'INSERT INTO waiting_inmates (first_name, last_name, inmate_number, prison, state, intro_letter) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [first_name, last_name, inmate_number, prison, state, intro_letter]
+    );
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating inmate:', error);
+    res.status(500).json({ error: 'Failed to create inmate' });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('*', (req, res) => {
