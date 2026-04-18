@@ -5,26 +5,18 @@ const path = require('path');
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Database connection - uses Railway's environment variable
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Test database connection
 pool.connect()
-  .then(() => console.log('✅ Connected to Railway PostgreSQL'))
-  .catch(err => console.error('❌ Database connection error:', err));
+  .then(() => console.log('Connected to Railway PostgreSQL'))
+  .catch(err => console.error('Database connection error:', err));
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// API ENDPOINTS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// Health check
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
@@ -33,7 +25,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Get all volunteers
 app.get('/api/volunteers', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM volunteers ORDER BY id DESC');
@@ -44,7 +35,6 @@ app.get('/api/volunteers', async (req, res) => {
   }
 });
 
-// Create new volunteer
 app.post('/api/volunteers', async (req, res) => {
   try {
     const { name, email, country, age } = req.body;
@@ -61,7 +51,6 @@ app.post('/api/volunteers', async (req, res) => {
   }
 });
 
-// Get all waiting inmates
 app.get('/api/waiting-inmates', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM waiting_inmates ORDER BY id DESC');
@@ -72,5 +61,15 @@ app.get('/api/waiting-inmates', async (req, res) => {
   }
 });
 
-// Create new waiting inmate
-app.post('/api
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log('Ministry Platform running on port ' + PORT);
+});
+
+module.exports = app;
